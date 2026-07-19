@@ -1,0 +1,1088 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        0
+      ],
+      "id": "4b7a8065-7d4b-44c2-b1c3-a47bb36da6a4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "hrefs",
+              "cssSelector": "table td span.title a",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            },
+            {
+              "key": "titles",
+              "cssSelector": "table td span.title a",
+              "returnValue": "attribute",
+              "attribute": "title",
+              "returnArray": true
+            },
+            {
+              "key": "dates",
+              "cssSelector": "table td.date",
+              "returnValue": "html",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "5a33f8e8-453c-48ea-890d-420f74035fc9",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "hrefs, titles, dates",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "9223947e-2e18-4cf1-9f25-2aec67750771",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "664190a8-a802-4fa3-9775-33d847630b91",
+              "leftValue": "={{ $json.dates }}",
+              "rightValue": "<strong",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "7edd666a-d11d-42e6-8411-7c4534bbbe04",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "516ca513-e09c-4586-8851-ef87d80cf58b",
+              "name": "id",
+              "value": "={{ $json.hrefs.match(/id=(\\d+)/)[1] }}",
+              "type": "number"
+            },
+            {
+              "id": "bf0f6dd8-f047-489d-9237-3681615439d0",
+              "name": "title",
+              "value": "={{ $json.titles }}",
+              "type": "string"
+            },
+            {
+              "id": "6da783bf-72a4-47fb-8cca-fc4cce7beeef",
+              "name": "date",
+              "value": "={{ $json.dates }}",
+              "type": "string"
+            },
+            {
+              "id": "d7d9ddd6-f459-49c7-8941-41334b5c848e",
+              "name": "source",
+              "value": "={{ $('SrcConfig').item.json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "ad97e021-8b13-4a4f-92be-e4f17ad49378",
+              "name": "url",
+              "value": "={{ $('SrcConfig').item.json.base_url + $json.hrefs }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1456,
+        0
+      ],
+      "id": "09daa328-b7c4-4c83-bf1f-f8aa316de191",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "***SPREADSHEET_ID***",
+          "mode": "list",
+          "cachedResultName": "wsu-notice-bot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/***SPREADSHEET_ID***/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1855793501,
+          "mode": "list",
+          "cachedResultName": "_state_n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/***SPREADSHEET_ID***/edit#gid=1855793501"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        272,
+        0
+      ],
+      "id": "ad9885a1-7b48-48f8-b3b1-2f75cb151fa0",
+      "name": "GetState",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "HyME6JpihAhHo9Ul",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "262748b9-79f6-4e3f-b82d-340f987e8821",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "={{ $('GetState').all().find(x => x.json.source === $json.source).json.last_seen_id }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1664,
+        0
+      ],
+      "id": "6a22faea-d9e4-4cd8-9ff8-b5b6c01be780",
+      "name": "NewOnly"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.title }}",
+                    "rightValue": "수강|휴학|복학|전과|재입학|시험|고사|시간표|성적|졸업|장학|출석|학점|등록금",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "6db753a5-4650-48e8-b367-fb2e8c9085d7"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "학사"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c398949d-a405-4190-8045-dca718098259",
+                    "leftValue": "={{ $json.title }}",
+                    "rightValue": "경진대회|공모전|해커톤|대회|모집|창업|교육생",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "공모전"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "allMatchingOutputs": false
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1872,
+        0
+      ],
+      "id": "689d10af-9abc-4c68-bfe3-3c7d36e1f876",
+      "name": "Category"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "***SPREADSHEET_ID***",
+          "mode": "list",
+          "cachedResultName": "wsu-notice-bot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/***SPREADSHEET_ID***/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1561320197,
+          "mode": "list",
+          "cachedResultName": "notices_n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/***SPREADSHEET_ID***/edit#gid=1561320197"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "notice_id": "={{ $json.id }}",
+            "source": "={{ $json.source }}",
+            "title": "={{ $json.title }}",
+            "url": "={{ $json.url }}",
+            "posted_date": "={{ $json.date }}",
+            "category": "학사 ",
+            "collected_at": "={{ $now.format('yyyy-MM-dd HH:mm') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "notice_id",
+              "displayName": "notice_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "posted_date",
+              "displayName": "posted_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "collected_at",
+              "displayName": "collected_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2288,
+        -48
+      ],
+      "id": "8070fe24-062d-47bd-a31d-c9f604f0b1db",
+      "name": "Append학사",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "HyME6JpihAhHo9Ul",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "***TELEGRAM_CHAT_ID***",
+        "text": "={{ '🎓 학사 공지\\n\\n' + $('Category').item.json.title + '\\n\\n📅 ' + $('Category').item.json.date + '\\n🔗 ' + $('Category').item.json.url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2496,
+        -48
+      ],
+      "id": "a10a179f-8062-41a4-a1b4-c527a023154d",
+      "name": "Send a text message",
+      "webhookId": "3932df3f-519e-4998-a29c-76cdc87a1258",
+      "credentials": {
+        "telegramApi": {
+          "id": "CdIFD858pXCmKxhU",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "***TELEGRAM_CHAT_ID***",
+        "text": "={{ '🏆 공모전 공지\\n\\n' + $('Category').item.json.title + '\\n\\n📅 ' + $('Category').item.json.date + '\\n🔗 ' + $('Category').item.json.url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2496,
+        176
+      ],
+      "id": "44359c96-5abf-47cc-bed9-60fda4db4cbb",
+      "name": "Send a text message1",
+      "webhookId": "7ebedc45-8169-4387-869d-3d4a9e29a30b",
+      "credentials": {
+        "telegramApi": {
+          "id": "CdIFD858pXCmKxhU",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "***SPREADSHEET_ID***",
+          "mode": "list",
+          "cachedResultName": "wsu-notice-bot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/***SPREADSHEET_ID***/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1561320197,
+          "mode": "list",
+          "cachedResultName": "notices_n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/***SPREADSHEET_ID***/edit#gid=1561320197"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "notice_id": "={{ $json.id }}",
+            "source": "={{ $json.source }}",
+            "title": "={{ $json.title }}",
+            "url": "={{ $json.url }}",
+            "posted_date": "={{ $json.date }}",
+            "collected_at": "={{ $now.format('yyyy-MM-dd HH:mm') }}",
+            "category": "공모전"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "notice_id",
+              "displayName": "notice_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "posted_date",
+              "displayName": "posted_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "collected_at",
+              "displayName": "collected_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2288,
+        176
+      ],
+      "id": "531146a2-f296-4423-acca-940f05c81c05",
+      "name": "Append공모전",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "HyME6JpihAhHo9Ul",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "***SPREADSHEET_ID***",
+          "mode": "list",
+          "cachedResultName": "wsu-notice-bot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/***SPREADSHEET_ID***/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1561320197,
+          "mode": "list",
+          "cachedResultName": "notices_n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/***SPREADSHEET_ID***/edit#gid=1561320197"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "notice_id": "={{ $json.id }}",
+            "source": "={{ $json.source }}",
+            "title": "={{ $json.title }}",
+            "url": "={{ $json.url }}",
+            "posted_date": "={{ $json.date }}",
+            "collected_at": "={{ $now.format('yyyy-MM-dd HH:mm') }}",
+            "category": "기타"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "notice_id",
+              "displayName": "notice_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "posted_date",
+              "displayName": "posted_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "collected_at",
+              "displayName": "collected_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2288,
+        400
+      ],
+      "id": "da1c9af3-05e1-4a9d-af4c-3fe6bb8bd9b7",
+      "name": "Append기타",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "HyME6JpihAhHo9Ul",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "id",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        672
+      ],
+      "id": "605b9b79-d6c4-49c3-b25a-60dcd5d8e057",
+      "name": "Sort"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        2080,
+        672
+      ],
+      "id": "094d72a5-d9b5-41f9-ac46-82aad226f2c7",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "***SPREADSHEET_ID***",
+          "mode": "list",
+          "cachedResultName": "wsu-notice-bot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/***SPREADSHEET_ID***/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1855793501,
+          "mode": "list",
+          "cachedResultName": "_state_n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/***SPREADSHEET_ID***/edit#gid=1855793501"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "source": "={{ $json.source }}",
+            "last_seen_id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "source"
+          ],
+          "schema": [
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "last_seen_id",
+              "displayName": "last_seen_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2288,
+        672
+      ],
+      "id": "8c1f6df2-af4d-474d-93bf-700cbc609508",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "HyME6JpihAhHo9Ul",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "05a477f9-dd4a-4d0c-a957-c399625f767b",
+              "name": "board_url",
+              "value": "={{ { www: 'https://www.wsu.ac.kr/board/index.jsp?code=community0101', cs: 'https://cs.wsu.ac.kr/board/index.jsp?code=cs0501', swhit: 'https://swhit.wsu.ac.kr/board/index.jsp?code=swhit0501a' }[$json.source] }}",
+              "type": "string"
+            },
+            {
+              "id": "8fb87dd1-6091-4d91-b3ca-e7b0ced515f7",
+              "name": "base_url",
+              "value": "={{ { www: 'https://www.wsu.ac.kr/board/', cs: 'https://cs.wsu.ac.kr/board/', swhit: 'https://swhit.wsu.ac.kr/board/' }[$json.source] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        0
+      ],
+      "id": "36d5e2e4-6787-4304-bbd8-801e95202a30",
+      "name": "SrcConfig"
+    },
+    {
+      "parameters": {
+        "url": "https://www.wsu.ac.kr/exsignon/sso/sso_identify.jsp?RelayState=%2Fboard%2Findex.jsp%3Fcode%3Dcommunity0101&failureCause=unauthorized&status=failure",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        80,
+        0
+      ],
+      "id": "8ae0aedf-42b6-4367-957e-6be0ac225071",
+      "name": "SsoCookie",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "url": "={{ $('SrcConfig').item.json.board_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0"
+            },
+            {
+              "name": "Cookie",
+              "value": "={{ $('SsoCookie').first().json.headers['set-cookie'][0].split(';')[0] }}"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          },
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "19a9629e-a0dc-47f5-b184-9e3dc42c0d22",
+      "name": "FetchBoard"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "SsoCookie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "NewOnly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetState": {
+      "main": [
+        [
+          {
+            "node": "SrcConfig",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NewOnly": {
+      "main": [
+        [
+          {
+            "node": "Category",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Category": {
+      "main": [
+        [
+          {
+            "node": "Append학사",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append공모전",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append기타",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append학사": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append공모전": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append기타": {
+      "main": [
+        []
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SrcConfig": {
+      "main": [
+        [
+          {
+            "node": "FetchBoard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SsoCookie": {
+      "main": [
+        [
+          {
+            "node": "GetState",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FetchBoard": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7441fbda-ab08-418d-820b-0af05d728f95",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "***INSTANCE_ID***"
+  },
+  "nodeGroups": [],
+  "id": "f1EFUr0sUcWJYLBZ",
+  "tags": []
+}

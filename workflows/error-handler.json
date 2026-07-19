@@ -1,0 +1,66 @@
+{
+  "name": "error-handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "42a89f89-35e6-4c34-8c14-d3a8a2fc6659",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "***TELEGRAM_CHAT_ID***",
+        "text": "=⚠️ 워크플로우 실행 실패  워크플로우: {{ $json.workflow.name }} 실패 노드: {{ $json.execution.lastNodeExecuted }} 오류: {{ $json.execution.error.message }} 시각: {{ $now.format('yyyy-MM-dd HH:mm') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "773d2a36-1735-4add-addc-e1fd8adedb38",
+      "name": "Send a text message",
+      "webhookId": "6ca4282e-3295-48d6-b494-f767d292ef38",
+      "credentials": {
+        "telegramApi": {
+          "id": "Hl6BgJWshfea6ED3",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c46cc3ca-b889-49ab-aedf-8a618d202b01",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "***INSTANCE_ID***"
+  },
+  "nodeGroups": [],
+  "id": "2qx6w8624UmNY3dd",
+  "tags": []
+}
